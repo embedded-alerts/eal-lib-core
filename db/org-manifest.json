@@ -1,0 +1,22 @@
+{
+  "githubOrg": "embedded-alerts",
+  "libCore": "embedded-alerts/eal-lib-core",
+  "interfaces": "embedded-alerts/eal-interfaces",
+  "prefix": "eal",
+  "pgSchema": "eal",
+  "tenantColumn": "workspace_id",
+  "table": "page_embeddings",
+  "purpose": "Turn the web into embeddings and run a semantic replacement for Google Alerts: a saved alert rule is itself an embedding, and a crawl fires when a new page or page section lands close enough to it.",
+  "entityKinds": [
+    "page",
+    "page_section",
+    "feed_item",
+    "alert_rule",
+    "snapshot_diff",
+    "extracted_claim"
+  ],
+  "correlationEnabled": true,
+  "alertsEnabled": true,
+  "dedupeEnabled": true,
+  "linearTeam": "DEN"
+}
