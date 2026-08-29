@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "canonicalRepository": "embedded-alerts/eal-lib-core",
+  "sourceManifestSha256": "5aea70a56186e84b093edcd2221496d27c1c8039ffe3af28ad612c872d15fdf8",
+  "persistenceSchemaSha256": "6e6332647a14935904e70e491b23d527521afba759141251be87f5633c0a0610",
+  "desiredSqlSha256": "2fd4778778057a41600290750499121fe279abcd5cc86a226ff54133f6ac54a5",
+  "sources": [
+    {
+      "path": "migrations/declarative/0001_initial.sql",
+      "repository": "embedded-alerts/eal-interfaces",
+      "revision": "892b5de55f9e0ea78c20852acb8c6eb89bc85fbc",
+      "sourcePath": "sql/001_initial.sql",
+      "sha256": "4c247e9f30f8dbe5390011cdb76d7da396ebd2d847f7117dd1a3d06faddddbea"
+    }
+  ]
+}
