@@ -17,3 +17,5 @@ pub use capabilities::WriteContext;
 pub use capabilities::{
     AccessScope, ActorContext, CapabilityError, DatabaseFlavor, ReadContext, TenantContext,
 };
+
+pub mod embedding_contract;
