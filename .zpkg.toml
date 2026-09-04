@@ -1,0 +1,25 @@
+[package]
+org = "embedded-alerts"
+name = "eal-lib-core"
+version = "0.1.0"
+description = "Canonical embedded-alerts core library"
+license = "MIT"
+
+[package.repository]
+vcs = "git"
+url = "https://github.com/embedded-alerts/eal-lib-core"
+
+[dependencies]
+"ORESoftware/ores-locks-and-leases" = "^0.1.0"
+"embedded-alerts/eal-interfaces" = "^0.1.0"
+
+[install]
+dir = ".vendor/.zed"
+
+[targets.repository]
+dir = "."
+
+[targets.locks]
+dir = "locks"
+name = "eal-locks"
+adapter = "none"
