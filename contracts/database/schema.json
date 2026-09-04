@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/embedded-alerts/eal-lib-core/blob/main/contracts/database/schema.json",
+  "title": "Embedded Alerts persistence inventory contract",
+  "description": "Bootstrap JSON Schema for the canonical SQL inventory. Column-level mappings are promoted only after semantic catalog reconciliation and generated-adapter parity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "values"
+  ],
+  "properties": {
+    "table": {
+      "type": "string",
+      "enum": [
+        "alert_documents",
+        "alert_rules"
+      ]
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "x-lib-core": {
+    "format": 1,
+    "product": "eal",
+    "authority": "contracts/database/desired.sql",
+    "schemaPhase": "inventory-bootstrap",
+    "tables": [
+      "alert_documents",
+      "alert_rules"
+    ],
+    "functions": [],
+    "capabilityProfiles": [
+      "contracts",
+      "read",
+      "write",
+      "migrator"
+    ],
+    "generatedAdapters": [
+      "rust-seaorm",
+      "typescript-drizzle",
+      "typescript-prisma",
+      "typescript-typeorm",
+      "go-ent",
+      "dart-drift"
+    ]
+  }
+}

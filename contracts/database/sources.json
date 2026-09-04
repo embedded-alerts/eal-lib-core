@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "canonicalRepository": "embedded-alerts/eal-lib-core",
+  "authoritativeDialect": "postgresql",
+  "cockroachDbMode": "dpm-live-verification-required",
+  "sources": [
+    {
+      "path": "migrations/declarative/0001_initial.sql",
+      "repository": "embedded-alerts/eal-interfaces",
+      "revision": "892b5de55f9e0ea78c20852acb8c6eb89bc85fbc",
+      "sourcePath": "sql/001_initial.sql",
+      "sha256": "4c247e9f30f8dbe5390011cdb76d7da396ebd2d847f7117dd1a3d06faddddbea"
+    }
+  ],
+  "excludedLegacySources": []
+}

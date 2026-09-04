@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "interfaces": {
+    "repository": "embedded-alerts/eal-interfaces",
+    "revision": "892b5de55f9e0ea78c20852acb8c6eb89bc85fbc"
+  },
+  "policy": "Wire contracts never become implicit database contracts; each mapping is explicit and one-way.",
+  "status": "bootstrap-mapping",
+  "mappings": [
+    {
+      "wireType": "AlertRule",
+      "table": "alert_rules",
+      "direction": "explicit-adapter-required"
+    },
+    {
+      "wireType": "IndexedDocument",
+      "table": "alert_documents",
+      "direction": "explicit-adapter-required"
+    }
+  ]
+}
