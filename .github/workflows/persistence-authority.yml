@@ -1,0 +1,182 @@
+name: Canonical persistence authority
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/persistence-authority.yml'
+      - 'contracts/persistence/**'
+      - 'sql/**'
+      - 'scripts/verify-alert-persistence.mjs'
+      - 'scripts/verify-desired-sql-v3.mjs'
+  push:
+    branches: [main, master, dev]
+    paths:
+      - '.github/workflows/persistence-authority.yml'
+      - 'contracts/persistence/**'
+      - 'sql/**'
+      - 'scripts/verify-alert-persistence.mjs'
+      - 'scripts/verify-desired-sql-v3.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: persistence-authority-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EAL_INTERFACES_REF: fbe2dcdee4549fbb9053e2417868f6b581114055
+  TJSV_REF: c745036456dd80408b83217118b8563edb8f6abd
+  TYPESPEC_AUTHORITY: contracts/persistence/main.tsp
+  JSON_SCHEMA_AUTHORITY: contracts/persistence/authored.schema.json
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact lib-core head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact head and authored authority inputs
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -s sql/desired-v3.sql
+          test -s "$TYPESPEC_AUTHORITY"
+          test -s "$JSON_SCHEMA_AUTHORITY"
+          grep -F 'https://json-schema.org/draft/2020-12/schema' "$JSON_SCHEMA_AUTHORITY"
+          git diff --check
+          mkdir -p .typespec-json-schema-validator/persistence
+          sha256sum "$TYPESPEC_AUTHORITY" "$JSON_SCHEMA_AUTHORITY" \
+            > .typespec-json-schema-validator/persistence/authored.sha256
+
+      - name: Set up tested Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.16.0
+
+      - name: Check out pinned interface SQL projection
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: embedded-alerts/eal-interfaces
+          ref: ${{ env.EAL_INTERFACES_REF }}
+          path: vendor/eal-interfaces
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify SQL replay safety and interface physical-shape parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C vendor/eal-interfaces rev-parse HEAD)" = "$EAL_INTERFACES_REF"
+          node scripts/verify-desired-sql-v3.mjs
+          node scripts/verify-alert-persistence.mjs vendor/eal-interfaces/sql/001_initial.sql \
+            | tee .typespec-json-schema-validator/persistence/sql-parity.json
+
+      - name: Transpile TypeSpec to Schema B and compare with authored Schema A
+        uses: ORESoftware/typespec-json-schema-validator@c745036456dd80408b83217118b8563edb8f6abd
+        with:
+          typespec: contracts/persistence/main.tsp
+          schema: contracts/persistence/authored.schema.json
+          instances: contracts/persistence/instances
+          report: .typespec-json-schema-validator/persistence/report.json
+          sarif: .typespec-json-schema-validator/persistence/report.sarif
+          contract_ir: .typespec-json-schema-validator/persistence/contract-ir.json
+          output_dir: .typespec-json-schema-validator/persistence/generated
+          max_probes: '128'
+
+      - name: Verify fresh Contract IR and full persistence declaration scope
+        uses: ORESoftware/typespec-json-schema-validator/actions/verify-contract-ir@c745036456dd80408b83217118b8563edb8f6abd
+        with:
+          contract_ir: .typespec-json-schema-validator/persistence/contract-ir.json
+          report: .typespec-json-schema-validator/persistence/report.json
+          typespec: contracts/persistence/main.tsp
+          schema: contracts/persistence/authored.schema.json
+          generated_schema: .typespec-json-schema-validator/persistence/generated/typespec.generated.schema.json
+          expected_declarations: '["EmbeddedAlerts.Persistence.AlertDocumentRow","EmbeddedAlerts.Persistence.AlertRuleRow","EmbeddedAlerts.Persistence.PersistenceRegistration"]'
+
+      - name: Prove generated schema is evidence and authored peers are immutable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .typespec-json-schema-validator/persistence/generated/typespec.generated.schema.json
+          sha256sum -c .typespec-json-schema-validator/persistence/authored.sha256
+          git diff --exit-code -- "$TYPESPEC_AUTHORITY" "$JSON_SCHEMA_AUTHORITY"
+          if git ls-files contracts/persistence | grep -Eq '(^|/)(typespec\.generated\.schema\.json|schema-b\.json)$'; then
+            echo 'generated comparison schema must not be tracked as an authored authority' >&2
+            exit 1
+          fi
+
+      - name: Build one-sided peer-authority drift controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .typespec-json-schema-validator/persistence/drift
+          cp "$JSON_SCHEMA_AUTHORITY" .typespec-json-schema-validator/persistence/drift/schema-only.schema.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('.typespec-json-schema-validator/persistence/drift/schema-only.schema.json')
+          doc = json.loads(path.read_text())
+          doc['$defs']['PersistenceRegistration']['properties']['schemaVersion']['const'] = 'embedded-alerts.persistence/v2'
+          path.write_text(json.dumps(doc, indent=2) + '\n')
+          PY
+          sed 's/embedded-alerts.persistence\/v1/embedded-alerts.persistence\/v2/' \
+            "$TYPESPEC_AUTHORITY" \
+            > .typespec-json-schema-validator/persistence/drift/typespec-only.tsp
+          sha256sum -c .typespec-json-schema-validator/persistence/authored.sha256
+
+      - name: JSON-Schema-only drift must fail closed
+        id: schema_drift
+        continue-on-error: true
+        uses: ORESoftware/typespec-json-schema-validator@c745036456dd80408b83217118b8563edb8f6abd
+        with:
+          typespec: contracts/persistence/main.tsp
+          schema: .typespec-json-schema-validator/persistence/drift/schema-only.schema.json
+          instances: contracts/persistence/instances
+          report: .typespec-json-schema-validator/persistence/schema-only/report.json
+          output_dir: .typespec-json-schema-validator/persistence/schema-only/generated
+          quiet: 'true'
+
+      - name: TypeSpec-only drift must fail closed
+        id: typespec_drift
+        continue-on-error: true
+        uses: ORESoftware/typespec-json-schema-validator@c745036456dd80408b83217118b8563edb8f6abd
+        with:
+          typespec: .typespec-json-schema-validator/persistence/drift/typespec-only.tsp
+          schema: contracts/persistence/authored.schema.json
+          instances: contracts/persistence/instances
+          report: .typespec-json-schema-validator/persistence/typespec-only/report.json
+          output_dir: .typespec-json-schema-validator/persistence/typespec-only/generated
+          quiet: 'true'
+
+      - name: Require both independent-authority drift controls to fail
+        shell: bash
+        env:
+          SCHEMA_OUTCOME: ${{ steps.schema_drift.outcome }}
+          TYPESPEC_OUTCOME: ${{ steps.typespec_drift.outcome }}
+        run: |
+          set -euo pipefail
+          test "$SCHEMA_OUTCOME" = failure
+          test "$TYPESPEC_OUTCOME" = failure
+          sha256sum -c .typespec-json-schema-validator/persistence/authored.sha256
+          git diff --check
+
+      - name: Retain persistence certification evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: persistence-authority-${{ github.event.repository.name }}-${{ github.run_id }}
+          path: .typespec-json-schema-validator/persistence/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
