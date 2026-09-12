@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "embedded-alerts.persistence.v1.schema.json",
+  "$defs": {
+    "AlertRuleRow": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "AlertRuleRow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "query": { "type": "string" },
+        "threshold": { "type": "number" },
+        "deliveryChannel": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "query",
+        "threshold",
+        "deliveryChannel",
+        "enabled",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ],
+      "unevaluatedProperties": false
+    },
+    "AlertDocumentRow": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "AlertDocumentRow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sourceUri": { "type": "string" },
+        "contentSha256": { "type": "string" },
+        "contentText": { "type": "string" },
+        "embedding": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "publishedAt": { "type": "string" },
+        "ingestedAt": { "type": "string" }
+      },
+      "required": ["id", "sourceUri", "contentSha256", "contentText", "ingestedAt"],
+      "unevaluatedProperties": false
+    },
+    "PersistenceRegistration": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "PersistenceRegistration",
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "type": "string", "const": "embedded-alerts.persistence/v1" },
+        "schema": { "type": "string", "const": "public" },
+        "alertRulesTable": { "type": "string", "const": "alert_rules" },
+        "alertDocumentsTable": { "type": "string", "const": "alert_documents" }
+      },
+      "required": ["schemaVersion", "schema", "alertRulesTable", "alertDocumentsTable"],
+      "unevaluatedProperties": false
+    }
+  }
+}
