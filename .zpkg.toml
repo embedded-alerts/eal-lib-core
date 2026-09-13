@@ -11,6 +11,7 @@ url = "https://github.com/embedded-alerts/eal-lib-core"
 
 [dependencies]
 "oresoftware/ores-locks-and-leases" = "=0.1.1"
+"oresoftware/next-loggers" = "^0.1.0"
 "embedded-alerts/eal-interfaces" = "^0.1.0"
 
 [install]
