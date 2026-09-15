@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS embedded_alerts.semantic_embedding_index (
 CREATE INDEX IF NOT EXISTS semantic_embedding_index_tenant_space_purpose
   ON embedded_alerts.semantic_embedding_index (tenant_id, embedding_space, purpose);
 
-CREATE INDEX IF NOT EXISTS semantic_embedding_index_hnsw
+CREATE INDEX IF NOT EXISTS semantic_embedding_index_halfvec_hnsw_idx
   ON embedded_alerts.semantic_embedding_index
   USING hnsw (indexed_embedding extensions.halfvec_cosine_ops);
 
