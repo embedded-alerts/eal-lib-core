@@ -18,7 +18,10 @@ BEGIN
   IF source_dimensions IS NULL OR source_dimensions < 1 OR source_dimensions > 4096 THEN
     RAISE EXCEPTION 'embedding source dimensions must be between 1 and 4096';
   END IF;
-  IF EXISTS (SELECT 1 FROM unnest(input_values) AS value WHERE NOT isfinite(value)) THEN
+  IF EXISTS (
+    SELECT 1 FROM unnest(input_values) AS value
+    WHERE value::text IN ('NaN', 'Infinity', '-Infinity')
+  ) THEN
     RAISE EXCEPTION 'embedding values must be finite';
   END IF;
   padded := input_values || array_fill(0.0::real, ARRAY[4100 - source_dimensions]);
