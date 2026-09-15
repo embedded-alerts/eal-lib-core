@@ -1,0 +1,39 @@
+{
+  "contractVersion": 1,
+  "dimensions": {
+    "exactStorage": 4100,
+    "indexedProjection": 4000,
+    "maximumSource": 4096
+  },
+  "postgresFamily": {
+    "base": ["postgresql", "neon", "supabase"],
+    "extension": "vector",
+    "extensionSchema": "extensions",
+    "extensionVersionPinned": false
+  },
+  "migrationPlanning": {
+    "runtimeMayApply": false,
+    "requiresShadowVerification": true,
+    "desiredStateIsIdempotent": true
+  },
+  "databaseFirst": {
+    "postgresDesiredState": "embedding-contract/postgres/desired-state.sql",
+    "postgresQuery": "embedding-contract/postgres/hybrid-search.sql",
+    "postgresFamilyPreflight": "embedding-contract/postgres/preflight.sql",
+    "postgresIndexReconciliation": "embedding-contract/postgres/reconcile-index.sql",
+    "supabasePrivateAdapter": "embedding-contract/supabase/private-adapter.sql",
+    "supabasePrivilegeVerification": "embedding-contract/supabase/verify-privileges.sql"
+  },
+  "codeFirst": {
+    "typeSpec": "embedding-contract/contracts/vector-contract.tsp",
+    "jsonSchema": "embedding-contract/contracts/vector-contract.schema.json",
+    "ormProjection": "embedding-contract/contracts/orm-projection.rs"
+  },
+  "ranking": {
+    "candidateStorage": "extensions.halfvec(4000)",
+    "candidateIndex": "hnsw/halfvec_cosine_ops",
+    "exactStorage": "extensions.vector(4100)",
+    "exactRerankRequired": true,
+    "binaryQuantizationMayReplaceDenseProjection": false
+  }
+}
