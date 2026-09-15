@@ -39,8 +39,8 @@ IMMUTABLE
 STRICT
 AS $$
   SELECT original_dimensions BETWEEN 1 AND 4096
-     AND extensions.l2_norm(
-       extensions.subvector(input_embedding, original_dimensions + 1, 4100 - original_dimensions)
+     AND extensions.vector_norm(
+       extensions.subvector(input_embedding, original_dimensions + 1, 4100 - original_dimensions)::extensions.vector
      ) = 0;
 $$;
 
