@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "embedded-alerts.persistence/v1",
+  "schema": "public",
+  "alertRulesTable": "alert_rules",
+  "alertDocumentsTable": "alert_documents",
+  "unexpected": true
+}
