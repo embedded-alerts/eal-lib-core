@@ -1,0 +1,17 @@
+{
+  "schema": "ores.validation.attolang-boundary/v1",
+  "owner": "embedded-alerts/eal-lib-core",
+  "status": "reference-only",
+  "sourceExtension": ".atto",
+  "oracle": "attolang_projection.atto",
+  "publicAuthority": "embedded-alerts/eal-interfaces",
+  "routeAuthority": "ORESoftware/api-docs",
+  "compiledEvidence": false,
+  "requiredRuntimeGates": [
+    "compiler-exact-head",
+    "projection-parity-public-server",
+    "operation-id-binding",
+    "unknown-field-rejection",
+    "server-only-symbol-negative-fixtures"
+  ]
+}

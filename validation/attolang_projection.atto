@@ -1,0 +1,23 @@
+// Source-level AttoLang reference guard; not a compiled implementation.
+define module attolang_projection as
+  pub fnc may_export_public(bool is_public_definition,
+                            bool contains_server_definition,
+                            bool has_unknown_fields): bool {
+    return is_public_definition && !contains_server_definition &&
+      !has_unknown_fields;
+  }
+
+  pub fnc may_bind_route(bool known_operation_id,
+                         bool peer_schemas_agree): bool {
+    return known_operation_id && peer_schemas_agree;
+  }
+
+  pub fnc self_check(): bool {
+    return may_export_public(true,false,false) &&
+      !may_export_public(true,true,false) &&
+      !may_export_public(false,false,false) &&
+      !may_export_public(true,false,true) &&
+      may_bind_route(true,true) &&
+      !may_bind_route(false,true);
+  }
+end
